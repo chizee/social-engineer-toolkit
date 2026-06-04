@@ -1,8 +1,11 @@
+import ast
+import os
 from pathlib import Path
 
 import pytest
 
 import src.core.setcore as setcore
+import src.qrcode.qrgenerator as qrgenerator
 
 
 def test_safe_join_webroot_allows_files_under_root(tmp_path):
@@ -67,3 +70,35 @@ def test_legacy_payload_injectors_use_valid_choice_names():
 
     assert "legacy_payload_binary_path(definepath, choice1)" in source
     assert "shellcode/multipyiject" not in source
+
+
+def test_binary2teensy_no_longer_uses_removed_python2_builtins():
+    tree = ast.parse(Path("src/teensy/binary2teensy.py").read_text())
+
+    removed_builtin_calls = {
+        node.func.id
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id in {"file", "unicode"}
+    }
+
+    assert removed_builtin_calls == set()
+
+
+def test_qrcode_generator_creates_reports_directory(tmp_path, monkeypatch):
+    monkeypatch.setattr(qrgenerator.core, "userconfigpath", str(tmp_path) + os.sep)
+
+    qrgenerator.gen_qrcode("https://example.com")
+
+    assert (tmp_path / "reports/qrcode_attack.png").is_file()
+
+
+def test_set_http_server_uses_python3_header_and_aes_byte_handling():
+    source = Path("src/payloads/set_payloads/set_http_server.py").read_text()
+
+    assert ".headers.get(" in source
+    assert ".headers.getheader(" not in source
+    assert 'secret = b"' in source
+    assert "AES.new(secret, AES.MODE_ECB)" in source
+    assert "[0-9a-fA-F]" in source
