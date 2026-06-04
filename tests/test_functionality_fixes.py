@@ -253,3 +253,23 @@ def test_core_export_and_upx_file_operations_avoid_shell_wrappers():
     assert 'subprocess.Popen(\n            [upx_path, "-9", "-q", "-o", temp_binary_path, path_to_file]' in source
     assert 'data.replace(b"UPX", random_string.encode("ascii"), 4)' in source
     assert "os.replace(temp_binary_path, path_to_file)" in source
+
+
+def test_java_signing_helpers_avoid_shell_file_operations():
+    paths = [
+        Path("src/webattack/java_applet/unsigned.py"),
+        Path("src/webattack/java_applet/sign_jar.py"),
+        Path("src/html/unsigned/self_sign.py"),
+        Path("src/html/unsigned/verified_sign.py"),
+    ]
+
+    combined = "\n".join(path.read_text() for path in paths)
+
+    assert 'subprocess.Popen("rm ' not in combined
+    assert 'subprocess.Popen("cp ' not in combined
+    assert 'subprocess.Popen("mv ' not in combined
+    assert "shell=True" not in combined
+    assert 'subprocess.Popen(["javac", "Java.java"])' in combined
+    assert 'subprocess.Popen(["jar", "cvf", "Java_Update.jar", "Java.class"])' in combined
+    assert 'shutil.move("Signed_Update.jar", os.path.join(core.userconfigpath, "Signed_Update.jar"))' in combined
+    assert 'shutil.move("Signed_Update.jar", os.path.join(core.userconfigpath, "Signed_Update.jar.orig"))' in combined
