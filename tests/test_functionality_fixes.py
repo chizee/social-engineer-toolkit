@@ -193,3 +193,23 @@ def test_applet_and_ratte_file_operations_avoid_shell_copy_wrappers():
     assert "patched = data" in ratte
     assert "patched = data" in ratte_only
     assert 'to_replace = (core.grab_ipaddress() + ":80").encode("utf-8")' in ratte
+
+
+def test_binary_payload_patchers_use_bytes_markers():
+    payloadprep = Path("src/core/payloadprep.py").read_text()
+    dll_hijacking = Path("src/webattack/dll_hijacking/hijacking.py").read_text()
+
+    assert "data.replace(str(" not in payloadprep
+    assert "data.replace(str(" not in dll_hijacking
+    assert "def _binary_marker(value, marker):" in payloadprep
+    assert "def _nul_terminated(value):" in payloadprep
+    assert "data.replace(_binary_marker(exe_name, \"X\"), _nul_terminated(exe_name), 1)" in payloadprep
+    assert "data.replace(_binary_marker(webserver, \"S\"), _nul_terminated(webserver), 1)" in payloadprep
+    assert "data.replace(_binary_marker(ipaddr, \"M\"), _nul_terminated(ipaddr), 1)" in payloadprep
+    assert "data.replace(_binary_marker(port, \"Y\"), _nul_terminated(port), 1)" in payloadprep
+    assert 'host = ((len(ipaddr) + 1) * "X").encode("ascii")' in dll_hijacking
+    assert 'filewrite.write(data.replace(host, (ipaddr + "\\x00").encode("utf-8"), 1))' in dll_hijacking
+    assert 'subprocess.Popen("mkdir " + userconfigpath + "dll"' not in dll_hijacking
+    assert 'subprocess.Popen("cp %s/msf.exe %s/src/html/"' not in dll_hijacking
+    assert 'subprocess.Popen("cd %s/dll;rar a %s/template.rar *' not in dll_hijacking
+    assert 'subprocess.Popen("rar", shell=True' not in dll_hijacking
