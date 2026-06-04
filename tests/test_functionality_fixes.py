@@ -102,3 +102,34 @@ def test_set_http_server_uses_python3_header_and_aes_byte_handling():
     assert 'secret = b"' in source
     assert "AES.new(secret, AES.MODE_ECB)" in source
     assert "[0-9a-fA-F]" in source
+
+
+def test_encrypt_aes_accepts_bytes_secret_and_text_payload():
+    encrypted = setcore.encryptAES(b"1" * 32, "payload")
+
+    assert isinstance(encrypted, str)
+    assert encrypted
+    assert not encrypted.startswith("b'")
+
+
+def test_payload_aes_modules_use_explicit_mode_and_python3_urllib():
+    paths = [
+        Path("src/core/setcore.py"),
+        Path("src/payloads/set_payloads/http_shell.py"),
+        Path("src/payloads/set_payloads/listener.py"),
+    ]
+
+    for path in paths:
+        source = path.read_text()
+        assert "AES.new(secret, AES.MODE_ECB)" in source
+        assert "AES.new(secret)" not in source
+
+    http_shell = Path("src/payloads/set_payloads/http_shell.py").read_text()
+    assert "from urllib import parse, request" in http_shell
+    assert "urllib.request" not in http_shell
+    assert "urllib.parse" not in http_shell
+
+    listener = Path("src/payloads/set_payloads/listener.py").read_text()
+    assert "import _thread as thread" in listener
+    assert "conn.sendall(_socket_bytes(" in listener
+    assert "conn.send(str(" not in listener
