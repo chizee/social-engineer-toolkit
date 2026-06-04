@@ -133,3 +133,18 @@ def test_payload_aes_modules_use_explicit_mode_and_python3_urllib():
     assert "import _thread as thread" in listener
     assert "conn.sendall(_socket_bytes(" in listener
     assert "conn.send(str(" not in listener
+
+
+def test_remaining_python3_text_boundaries_are_normalized():
+    sd2teensy = Path("src/teensy/sd2teensy.py").read_text()
+    assert 'base64.b64encode(powershell_command.encode("utf-8")).decode("ascii")' in sd2teensy
+    assert "core.powershell_encodedcommand(powershell_command)" in sd2teensy
+
+    smtp_web = Path("src/phishing/smtp/client/smtp_web.py").read_text()
+    assert 'str(base64.b64encode(to.encode()))' not in smtp_web
+    assert "smtp_auth_b64(to)" in smtp_web
+
+    setcore = Path("src/core/setcore.py").read_text()
+    assert "# import the threading, socketserver, and simplehttpserver\n        import thread" not in setcore
+    assert 'conn.sendall(command.encode("utf-8"))' in setcore
+    assert "conn.send(command)" not in setcore

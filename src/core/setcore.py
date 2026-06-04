@@ -704,7 +704,6 @@ def start_web_server(directory):
 def start_web_server_unthreaded(directory):
     try:
         # import the threading, socketserver, and simplehttpserver
-        import thread
         import socketserver
         import http.server
         # create the httpd handler for the simplehttpserver
@@ -1548,7 +1547,7 @@ def socket_listener(port):
 
     while 1:
         command = raw_input("Enter shell command or quit: ")
-        conn.send(command)
+        conn.sendall(command.encode("utf-8"))
         # if we specify quit then break out of loop and close socket
         if command == "quit":
             break

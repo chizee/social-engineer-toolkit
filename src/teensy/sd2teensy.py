@@ -103,7 +103,7 @@ for char in powershell_command:
 # assign powershell command as the new one
 powershell_command = blank_command
 # base64 encode the powershell command
-powershell_command = base64.b64encode(powershell_command)
+powershell_command = base64.b64encode(powershell_command.encode("utf-8")).decode("ascii")
 
 # vbs filename
 vbs = core.generate_random_string(10, 15) + ".vbs"
