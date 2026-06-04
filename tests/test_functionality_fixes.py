@@ -240,3 +240,16 @@ def test_harvester_uses_python_file_operations_for_pem_files():
     assert "def copy_pem_files(source_pattern, destination):" in source
     assert 'shutil.rmtree(os.path.join(userconfigpath, "CA"), ignore_errors=True)' in source
     assert 'rex = re.compile(\'%([0-9a-fA-F][0-9a-fA-F])\', re.M)' in source
+
+
+def test_core_export_and_upx_file_operations_avoid_shell_wrappers():
+    source = Path("src/core/setcore.py").read_text()
+
+    assert 'subprocess.Popen("mkdir \'%s\';cp %s/web_clone/*' not in source
+    assert 'subprocess.Popen("mv %s/temp.binary %s"' not in source
+    assert '"%s -9 -q -o %s/temp.binary %s"' not in source
+    assert 'shutil.copytree(source_path, destination_path, dirs_exist_ok=True)' in source
+    assert 'shutil.copy2(source_path, destination_path)' in source
+    assert 'subprocess.Popen(\n            [upx_path, "-9", "-q", "-o", temp_binary_path, path_to_file]' in source
+    assert 'data.replace(b"UPX", random_string.encode("ascii"), 4)' in source
+    assert "os.replace(temp_binary_path, path_to_file)" in source
