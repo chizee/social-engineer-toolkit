@@ -148,3 +148,10 @@ def test_remaining_python3_text_boundaries_are_normalized():
     assert "# import the threading, socketserver, and simplehttpserver\n        import thread" not in setcore
     assert 'conn.sendall(command.encode("utf-8"))' in setcore
     assert "conn.send(command)" not in setcore
+
+
+def test_smtp_client_threads_sendmail_callable_instead_of_result():
+    source = Path("src/phishing/smtp/client/smtp_client.py").read_text()
+
+    assert "thread.start_new_thread(mailServer.sendmail(\n" not in source
+    assert "thread.start_new_thread(mailServer.sendmail,\n" in source

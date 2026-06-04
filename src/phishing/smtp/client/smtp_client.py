@@ -425,8 +425,8 @@ def mail(to, subject, text, attach, prioflag1, prioflag2):
                 print(str(e))
                 try:
                     mailServer.login(provideremail, pwd)
-                    thread.start_new_thread(mailServer.sendmail(
-                        from_address, to, io.getvalue()))
+                    thread.start_new_thread(
+                        mailServer.sendmail, (from_address, to, io.getvalue()))
                 except Exception as e:
                     return_continue()
 
