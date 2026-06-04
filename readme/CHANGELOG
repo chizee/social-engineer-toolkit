@@ -1,4 +1,16 @@
 ~~~~~~~~~~~~~~~~
+version 8.1.3
+~~~~~~~~~~~~~~~~
+
+* fix AES payload encryption/decryption paths to use explicit modes and Python 3 byte-safe base64 output
+* normalize Python 3 byte/text handling in payload patching, RATTE, DLL hijacking, Teensy, SMTP, and socket-send paths
+* fix Java payload generation to encode generated shellcode and AES keys instead of literal placeholder bytes
+* replace brittle shell-wrapped local file operations across web attack, harvester, Java applet, autorun, Fast-Track MSSQL, Metasploit payload, Teensy, and SET core paths
+* fix multiple path handling issues for web clone exports, applet naming defaults, RATTE staging, MSSQL payload staging, and SSL PEM staging
+* modernize Java signing and SSL certificate helper command execution to avoid shell parsing around filenames and certificate values
+* expand regression coverage for Python 3 compatibility, payload encoding, file staging, release metadata, and hardened helper behavior
+
+~~~~~~~~~~~~~~~~
 version 8.1.2
 ~~~~~~~~~~~~~~~~
 
