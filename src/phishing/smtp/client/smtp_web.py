@@ -458,10 +458,9 @@ def mail(to, subject, prioflag1, prioflag2, text):
             mailServer.sendmail(from_address, to, io.getvalue())
     except:
         # try logging in with base64 encoding here
-        import base64
         try:
-            mailServer.docmd("AUTH LOGIN", base64.b64encode(provideruser.encode()))
-            mailServer.docmd(base64.b64encode(pwd.encode()), "")
+            mailServer.docmd("AUTH LOGIN", smtp_auth_b64(provideruser))
+            mailServer.docmd(smtp_auth_b64(pwd), "")
 
         # except exceptions and print incorrect password
         except Exception as e:

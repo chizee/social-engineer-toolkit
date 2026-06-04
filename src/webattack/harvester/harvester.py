@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
 import subprocess
 import sys
-import html
 import os
 import re
 
-try:
-    from cgi import escape
-except ImportError:
-    from html import escape
+from html import escape
 
 # need for python2 -> 3
 try:
@@ -22,10 +18,11 @@ import socket
 # needed for python2 -> 3
 try:
     from SocketServer import *
-    import SocketServer
+    import SocketServer as ss
 
 except ImportError:
     from socketserver import *
+    import socketserver as ss
 
 import threading
 import datetime
@@ -58,8 +55,11 @@ me = mod_name()
 sys.path.append(definepath)
 
 
-if not os.path.isfile("%s/src/logs/harvester.log" % (os.getcwd())):
-    filewrite = open("%s/src/logs/harvester.log" % (os.getcwd()), "w")
+log_dir = os.path.join(os.getcwd(), "src/logs")
+os.makedirs(log_dir, exist_ok=True)
+harvester_log = os.path.join(log_dir, "harvester.log")
+if not os.path.isfile(harvester_log):
+    filewrite = open(harvester_log, "w")
     filewrite.write("")
     filewrite.close()
 
@@ -246,7 +246,7 @@ class SETHandler(BaseHTTPRequestHandler):
             pass
 
         webroot = os.path.abspath(os.path.join(userconfigpath, 'web_clone'))
-        requested_file = os.path.abspath(os.path.join(webroot, os.path.relpath(self.path, '/')))
+        requested_file = safe_join_webroot(webroot, self.path)
         # try block setup to catch transmission errors
         try:
 
@@ -254,10 +254,8 @@ class SETHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content_type', 'text/html')
                 self.end_headers()
-                fileopen = open(userconfigpath + "web_clone/index.html", "r")
-                for line in fileopen:
-                    line = line.encode('utf-8')
-                    self.wfile.write(line)
+                with open(userconfigpath + "web_clone/index.html", "rb") as fileopen:
+                    self.wfile.write(fileopen.read())
                 # write out that we had a visit
                 visits.write("hit\n")
                 # visits.close()
@@ -267,22 +265,18 @@ class SETHandler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content_type', 'text/html')
                 self.end_headers()
-                fileopen = open(userconfigpath + "web_clone/index2.html", "r")
-                for line in fileopen:
-                    line = line.encode('utf-8')
-                    self.wfile.write(line)
+                with open(userconfigpath + "web_clone/index2.html", "rb") as fileopen:
+                    self.wfile.write(fileopen.read())
                 # write out that we had a visit
                 visits.write("hit\n")
                 # visits.close()
 
             else:
-                if os.path.isfile(requested_file):
+                if requested_file and os.path.isfile(requested_file):
                     self.send_response(200)
                     self.end_headers()
-                    fileopen = open(requested_file, "rb")
-                    for line in fileopen:
-                        line = line.encode('utf-8')
-                        self.wfile.write(line)
+                    with open(requested_file, "rb") as fileopen:
+                        self.wfile.write(fileopen.read())
 
                 else:
                     self.send_response(404)
@@ -309,11 +303,14 @@ class SETHandler(BaseHTTPRequestHandler):
         # put the params into site.template for later user
         filewrite = open(userconfigpath + "site.template", "a")
         filewrite.write("\n")
-        if not os.path.isfile("%s/src/logs/harvester.log" % (os.getcwd())):
-            filewrite3 = open("%s/src/logs/harvester.log" % os.getcwd(), "w")
+        log_dir = os.path.join(os.getcwd(), "src/logs")
+        os.makedirs(log_dir, exist_ok=True)
+        harvester_log = os.path.join(log_dir, "harvester.log")
+        if not os.path.isfile(harvester_log):
+            filewrite3 = open(harvester_log, "w")
             filewrite3.write("")
             filewrite3.close()
-        filewrite2 = open("%s/src/logs/harvester.log" % os.getcwd(), "a")
+        filewrite2 = open(harvester_log, "a")
         filewrite.write("\n\n")
         print(bcolors.RED + "[*] WE GOT A HIT! Printing the output:\r" + bcolors.GREEN)
         for line in url:
@@ -553,7 +550,7 @@ def run():
 class SecureHTTPServer(HTTPServer):
 
     def __init__(self, server_address, HandlerClass):
-        SocketServer.BaseServer.__init__(self, server_address, HandlerClass)
+        ss.BaseServer.__init__(self, server_address, HandlerClass)
         # SSLv2 and SSLv3 supported
         ctx = SSL.Context(SSL.SSLv23_METHOD)
         # pem files defined before

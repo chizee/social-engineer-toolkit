@@ -5,6 +5,7 @@
 #
 import re
 import sys
+import builtins
 import socket
 import subprocess
 import shutil
@@ -23,8 +24,11 @@ import trace
 # python 2 and 3 compatibility
 try:
     from urllib.request import urlopen
+    from urllib.parse import unquote, urlsplit
 except ImportError:
     from urllib import urlopen
+    from urllib import unquote
+    from urlparse import urlsplit
 import multiprocessing
 
 if sys.version_info >= (3, 0):
@@ -40,17 +44,20 @@ except ImportError:
 
 try:
     raw_input
-except:
+except NameError:
     raw_input = input
 
-# check to see if we have python-pycrypto
+if not hasattr(builtins, "raw_input"):
+    builtins.raw_input = raw_input
+
+# check to see if we have pycryptodome
 try:
     from Crypto.Cipher import AES
 
 except ImportError:
 
     print(
-        "[!] The python-pycrypto python module not installed. You will lose the ability for encrypted communications.")
+        "[!] The pycryptodome Python module is not installed. You will lose the ability for encrypted communications.")
     pass
 
 # get the main SET path
@@ -75,6 +82,29 @@ def check_os():
     if os.name == "posix":
         operating_system = "posix"
     return operating_system
+
+
+def safe_join_webroot(webroot, request_path):
+    root_path = os.path.abspath(webroot)
+    request_path = unquote(urlsplit(request_path).path).lstrip("/")
+    requested_file = os.path.abspath(os.path.join(root_path, request_path))
+
+    try:
+        if os.path.commonpath([root_path, requested_file]) != root_path:
+            return None
+    except ValueError:
+        return None
+
+    return requested_file
+
+
+def smtp_auth_b64(value):
+    if isinstance(value, bytes):
+        raw_value = value
+    else:
+        raw_value = str(value).encode("utf-8")
+
+    return base64.b64encode(raw_value).decode("ascii")
 
 #
 # Class for colors
@@ -344,10 +374,8 @@ def meta_path():
     try:
 
         # pull from config first
-        msf_path = check_config("METASPLOIT_PATH=")
-        if not msf_path.endswith("/"):
-            msf_path = msf_path + "/"
-        if os.path.isfile(msf_path + "msfconsole"):
+        msf_path = _normalize_msf_path(check_config("METASPLOIT_PATH="))
+        if msf_path:
             trigger = 1
 
         # if we are using just the standard path for msfconsole
@@ -360,6 +388,11 @@ def meta_path():
         if os.path.isfile("/opt/metasploit-framework/msfconsole"):
             if trigger == 0:
                 msf_path = "/opt/metasploit-framework/"
+                trigger = 1
+
+        if os.path.isfile("/opt/metasploit-framework/bin/msfconsole"):
+            if trigger == 0:
+                msf_path = "/opt/metasploit-framework/bin/"
                 trigger = 1
 
         # specific for kali linux
@@ -418,6 +451,22 @@ def meta_path():
     if check_metasploit != "on":
         msf_path = False
     return msf_path
+
+
+def _normalize_msf_path(msf_path):
+    if not msf_path:
+        return None
+
+    msf_path = os.path.expanduser(msf_path.strip())
+    if os.path.isfile(msf_path) and os.path.basename(msf_path) == "msfconsole":
+        return os.path.dirname(msf_path) + "/"
+
+    if not msf_path.endswith("/"):
+        msf_path = msf_path + "/"
+    if os.path.isfile(msf_path + "msfconsole"):
+        return msf_path
+
+    return None
 
 #
 # grab the metaspoit path

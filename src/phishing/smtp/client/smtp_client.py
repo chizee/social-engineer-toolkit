@@ -419,8 +419,8 @@ def mail(to, subject, text, attach, prioflag1, prioflag2):
             input("Press {return} to view error message.")
             print(str(e))
             try:
-                mailServer.docmd("AUTH LOGIN", base64.b64encode(provideruser))
-                mailServer.docmd(base64.b64encode(pwd), "")
+                mailServer.docmd("AUTH LOGIN", smtp_auth_b64(provideruser))
+                mailServer.docmd(smtp_auth_b64(pwd), "")
             except Exception as e:
                 print(str(e))
                 try:
