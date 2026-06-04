@@ -155,3 +155,19 @@ def test_smtp_client_threads_sendmail_callable_instead_of_result():
 
     assert "thread.start_new_thread(mailServer.sendmail(\n" not in source
     assert "thread.start_new_thread(mailServer.sendmail,\n" in source
+
+
+def test_teensy_file_operations_avoid_shell_wrappers():
+    binary2teensy = Path("src/teensy/binary2teensy.py").read_text()
+    sd2teensy = Path("src/teensy/sd2teensy.py").read_text()
+    teensy = Path("src/teensy/teensy.py").read_text()
+
+    assert 'subprocess.Popen("rm ' not in binary2teensy
+    assert 'subprocess.Popen("msfconsole -r ' not in binary2teensy
+    assert 'subprocess.Popen("rm ' not in sd2teensy
+    assert 'subprocess.Popen("cp ' not in teensy
+    assert "os.remove(random_filename)" in binary2teensy
+    assert "os.remove(answer_path)" in binary2teensy
+    assert "subprocess.Popen([\"msfconsole\", \"-r\", answer_path])" in binary2teensy
+    assert "os.remove(random_filename)" in sd2teensy
+    assert "shutil.copyfile(metasploit_exec_path, os.path.join(webclone_path, \"x.exe\"))" in teensy
