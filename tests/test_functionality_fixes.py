@@ -213,3 +213,17 @@ def test_binary_payload_patchers_use_bytes_markers():
     assert 'subprocess.Popen("cp %s/msf.exe %s/src/html/"' not in dll_hijacking
     assert 'subprocess.Popen("cd %s/dll;rar a %s/template.rar *' not in dll_hijacking
     assert 'subprocess.Popen("rar", shell=True' not in dll_hijacking
+
+
+def test_java_payload_encoding_uses_generated_data_not_literals():
+    source = Path("src/core/payloadgen/create_payloads.py").read_text()
+
+    assert "base64.b64encode(b'data')" not in source
+    assert "base64.b64encode(b'secret')" not in source
+    assert 'for _ in range(11):' in source
+    assert 'data = base64.b64encode(data.encode("utf-8")).decode("ascii")' in source
+    assert 'secret = base64.b64encode(secret).decode("ascii")' in source
+    assert 'base_encode = base64.b64encode(x86).decode("ascii")' in source
+    assert 'subprocess.Popen("cp %s/shellcodeexec.custom' not in source
+    assert 'subprocess.Popen("mv %s/web_clone/index.html.new' not in source
+    assert 'os.path.join(userconfigpath, "web_clone", "index.html.new")' in source
