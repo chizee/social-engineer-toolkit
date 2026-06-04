@@ -106,6 +106,26 @@ def smtp_auth_b64(value):
 
     return base64.b64encode(raw_value).decode("ascii")
 
+
+def legacy_payload_binary_path(root_path, payload_choice):
+    payload_paths = {
+        "shellcode/alphanum": "src/payloads/exe/shellcodeexec.binary",
+        "shellcode/pyinject": "src/payloads/set_payloads/pyinjector.binary",
+        "shellcode/multipyinject": "src/payloads/set_payloads/multi_pyinjector.binary",
+    }
+    payload_path = payload_paths.get(payload_choice)
+    if payload_path is None:
+        raise ValueError("Unsupported legacy payload choice: %s" % payload_choice)
+
+    resolved_path = os.path.join(root_path, payload_path)
+    if not os.path.isfile(resolved_path):
+        raise FileNotFoundError(
+            "The legacy Java shellcode injector payload is unavailable: %s"
+            % resolved_path
+        )
+
+    return resolved_path
+
 #
 # Class for colors
 #
