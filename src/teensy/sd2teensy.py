@@ -231,7 +231,8 @@ Keyboard.send_now();
 }}
 """.format(random_filename=random_filename, encodedcommand=core.powershell_encodedcommand(powershell_command), vbs=vbs, bat=bat))
 # delete temporary file
-subprocess.Popen("rm {0} 1> /dev/null 2>/dev/null".format(random_filename), shell=True).wait()
+if os.path.isfile(random_filename):
+    os.remove(random_filename)
 print("[*] Binary to Teensy file exported as teensy.ino")
 # write the teensy.ino file out
 with open("teensy.ino", "w") as filewrite:
