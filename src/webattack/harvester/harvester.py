@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
 import subprocess
 import sys
-import html
 import os
 import re
 
-try:
-    from cgi import escape
-except ImportError:
-    from html import escape
+from html import escape
 
 # need for python2 -> 3
 try:
@@ -22,10 +18,11 @@ import socket
 # needed for python2 -> 3
 try:
     from SocketServer import *
-    import SocketServer
+    import SocketServer as ss
 
 except ImportError:
     from socketserver import *
+    import socketserver as ss
 
 import threading
 import datetime
@@ -553,7 +550,7 @@ def run():
 class SecureHTTPServer(HTTPServer):
 
     def __init__(self, server_address, HandlerClass):
-        SocketServer.BaseServer.__init__(self, server_address, HandlerClass)
+        ss.BaseServer.__init__(self, server_address, HandlerClass)
         # SSLv2 and SSLv3 supported
         ctx = SSL.Context(SSL.SSLv23_METHOD)
         # pem files defined before

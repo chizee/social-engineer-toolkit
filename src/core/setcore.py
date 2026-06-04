@@ -5,6 +5,7 @@
 #
 import re
 import sys
+import builtins
 import socket
 import subprocess
 import shutil
@@ -40,17 +41,20 @@ except ImportError:
 
 try:
     raw_input
-except:
+except NameError:
     raw_input = input
 
-# check to see if we have python-pycrypto
+if not hasattr(builtins, "raw_input"):
+    builtins.raw_input = raw_input
+
+# check to see if we have pycryptodome
 try:
     from Crypto.Cipher import AES
 
 except ImportError:
 
     print(
-        "[!] The python-pycrypto python module not installed. You will lose the ability for encrypted communications.")
+        "[!] The pycryptodome Python module is not installed. You will lose the ability for encrypted communications.")
     pass
 
 # get the main SET path
