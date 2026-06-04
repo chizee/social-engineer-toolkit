@@ -171,3 +171,25 @@ def test_teensy_file_operations_avoid_shell_wrappers():
     assert "subprocess.Popen([\"msfconsole\", \"-r\", answer_path])" in binary2teensy
     assert "os.remove(random_filename)" in sd2teensy
     assert "shutil.copyfile(metasploit_exec_path, os.path.join(webclone_path, \"x.exe\"))" in teensy
+
+
+def test_applet_and_ratte_file_operations_avoid_shell_copy_wrappers():
+    smtp_client = Path("src/phishing/smtp/client/smtp_client.py").read_text()
+    setcore = Path("src/core/setcore.py").read_text()
+    ratte = Path("modules/ratte_module.py").read_text()
+    ratte_only = Path("modules/ratte_only_module.py").read_text()
+
+    assert 'subprocess.Popen("cp ' not in smtp_client
+    assert 'subprocess.Popen("cp %s/msf.exe' not in setcore
+    assert 'subprocess.Popen(\n        "cp %s/Signed_Update.jar' not in setcore
+    assert 'subprocess.Popen("cp src/payloads/ratte/ratte.binary' not in ratte
+    assert 'subprocess.Popen("cp %s/Signed_Update.jar' not in ratte
+    assert 'subprocess.Popen("cp %s/ratteM.exe' not in ratte
+    assert "if filename not in (0, \"\"):" in setcore
+    assert "if applet_name in (0, \"\"):" in setcore
+    assert "shutil.copyfile(file_format, os.path.join(userconfigpath, filename1))" in smtp_client
+    assert 'os.path.join(userconfigpath, "rand_gen")' in ratte
+    assert 'os.path.join(userconfigpath, "ratteM.exe")' in ratte
+    assert "patched = data" in ratte
+    assert "patched = data" in ratte_only
+    assert 'to_replace = (core.grab_ipaddress() + ":80").encode("utf-8")' in ratte

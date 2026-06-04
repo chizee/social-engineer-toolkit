@@ -741,20 +741,23 @@ def java_applet_attack(website, port, directory):
     # this part is needed to rename the msf.exe file to a randomly generated
     # one
     filename = check_options("MSF.EXE=")
-    if check_options != 0:
+    if filename not in (0, ""):
 
         # move the file to the specified directory and filename
-        subprocess.Popen("cp %s/msf.exe %s/%s" % (userconfigpath, directory, filename),
-                         stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).wait()
+        shutil.copyfile(
+            os.path.join(userconfigpath, "msf.exe"),
+            os.path.join(directory, filename),
+        )
 
     applet_name = check_options("APPLET_NAME=")
-    if applet_name == "":
+    if applet_name in (0, ""):
         applet_name = generate_random_string(6, 15) + ".jar"
 
     # lastly we need to copy over the signed applet
-    subprocess.Popen(
-        "cp %s/Signed_Update.jar %s/%s" % (userconfigpath, directory, applet_name),
-                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).wait()
+    shutil.copyfile(
+        os.path.join(userconfigpath, "Signed_Update.jar"),
+        os.path.join(directory, applet_name),
+    )
 
     # start the web server by running it in the background
     start_web_server(directory)
