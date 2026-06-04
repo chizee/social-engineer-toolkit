@@ -293,3 +293,17 @@ def test_webattack_setup_helpers_avoid_shell_file_operations():
     assert 'os.makedirs(os.path.join("CA", "newcerts"), exist_ok=True)' in setssl
     assert '"openssl", "req",' in setssl
     assert '"-extensions", "v3_ca"' in setssl
+
+
+def test_spawn_uses_python_file_operations_for_staging():
+    source = Path("src/html/spawn.py").read_text()
+
+    assert 'subprocess.Popen("mv %s/web_clone/index.html.new %s/web_clone/index.html"' not in source
+    assert 'subprocess.Popen("cp %s/src/html/*.bin %s' not in source
+    assert 'subprocess.Popen("rm %s/index.html' not in source
+    assert "def copy_matches(pattern, destination):" in source
+    assert "def remove_matches(pattern):" in source
+    assert 'if applet_name in (0, ""):' in source
+    assert 'copy_matches(os.path.join(definepath, "src", "html", "*.bin"), apache_path)' in source
+    assert 'copy_matches(os.path.join(userconfigpath, "web_clone", "*"), apache_path)' in source
+    assert 'remove_matches(os.path.join(apache_path, "Signed*"))' in source
