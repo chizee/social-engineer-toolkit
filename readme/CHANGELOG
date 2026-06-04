@@ -1,4 +1,20 @@
 ~~~~~~~~~~~~~~~~
+version 8.1.0
+~~~~~~~~~~~~~~~~
+
+* add modern Python packaging metadata and editable install support
+* replace pycrypto with pycryptodome for current Python compatibility
+* update supported runtime target to Python 3.11 through 3.13
+* fix Python 3 raw_input compatibility for modules that import setcore indirectly
+* fix SSL credential harvester socketserver compatibility
+* serve harvester static files safely and block path traversal outside the web clone directory
+* fix harvester binary static-file responses and ensure harvester log directories exist
+* fix SMTP fallback authentication base64 handling on Python 3
+* improve Metasploit path detection for configured msfconsole executable paths
+* update GitHub Actions CI to current actions and supported Python versions
+* refresh README installation and development guidance
+
+~~~~~~~~~~~~~~~~
 version 8.0.3
 ~~~~~~~~~~~~~~~~
 
