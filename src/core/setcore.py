@@ -1749,25 +1749,27 @@ def encryptAES(secret, data):
     # the character used for padding--with a block cipher such as AES, the value
     # you encrypt must be a multiple of BLOCK_SIZE in length.  This character is
     # used to ensure that your value is always a multiple of BLOCK_SIZE
-    PADDING = '{'
+    PADDING = b'{'
 
     BLOCK_SIZE = 32
 
-    # one-liner to sufficiently pad the text to be encrypted
-    pad = lambda s: s + (BLOCK_SIZE - len(s) % BLOCK_SIZE) * PADDING
+    def to_bytes(value):
+        if isinstance(value, bytes):
+            return value
+        return str(value).encode("utf-8")
 
-    # random value here to randomize builds
-    a = 50 * 5
+    def pad(value):
+        raw_value = to_bytes(value)
+        return raw_value + (BLOCK_SIZE - len(raw_value) % BLOCK_SIZE) * PADDING
 
     # one-liners to encrypt/encode and decrypt/decode a string
     # encrypt with AES, encode with base64
     EncodeAES = lambda c, s: base64.b64encode(c.encrypt(pad(s)))
-    DecodeAES = lambda c, e: c.decrypt(base64.b64decode(e)).rstrip(PADDING)
 
-    cipher = AES.new(secret)
+    cipher = AES.new(secret, AES.MODE_ECB)
 
     aes = EncodeAES(cipher, data)
-    return str(aes)
+    return aes.decode("ascii")
 
 # compare ports to make sure its not already in a config file for metasploit
 
