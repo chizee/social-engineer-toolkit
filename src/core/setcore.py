@@ -665,8 +665,15 @@ def site_cloner(website, exportpath, *args):
 
     # copy the file to a new folder
     print_status("Site has been successfully cloned and is: " + exportpath)
-    subprocess.Popen("mkdir '%s';cp %s/web_clone/* '%s'" % (exportpath, userconfigpath,
-                                                            exportpath), stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).wait()
+    os.makedirs(exportpath, exist_ok=True)
+    web_clone_path = os.path.join(userconfigpath, "web_clone")
+    for entry in os.listdir(web_clone_path):
+        source_path = os.path.join(web_clone_path, entry)
+        destination_path = os.path.join(exportpath, entry)
+        if os.path.isdir(source_path):
+            shutil.copytree(source_path, destination_path, dirs_exist_ok=True)
+        else:
+            shutil.copy2(source_path, destination_path)
 
 
 #
@@ -891,28 +898,26 @@ def upx(path_to_file):
         print_info(
             "Packing the executable and obfuscating PE file randomly, one moment.")
         # packing executable
+        temp_binary_path = os.path.join(userconfigpath, "temp.binary")
         subprocess.Popen(
-            "%s -9 -q -o %s/temp.binary %s" % (upx_path, userconfigpath, path_to_file),
-                         stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).wait()
+            [upx_path, "-9", "-q", "-o", temp_binary_path, path_to_file],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        ).wait()
         # move it over the old file
-        subprocess.Popen("mv %s/temp.binary %s" % (userconfigpath, path_to_file),
-                         stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).wait()
+        os.replace(temp_binary_path, path_to_file)
 
         # random string
         random_string = generate_random_string(3, 3).upper()
 
         # 4 upx replace - we replace 4 upx open the file
-        fileopen = open(path_to_file, "rb")
-        filewrite = open(userconfigpath + "temp.binary", "wb")
-
-        # read the file open for data
-        data = fileopen.read()
+        with open(path_to_file, "rb") as fileopen:
+            data = fileopen.read()
         # replace UPX stub makes better evasion for A/V
-        filewrite.write(data.replace("UPX", random_string, 4))
-        filewrite.close()
+        with open(temp_binary_path, "wb") as filewrite:
+            filewrite.write(data.replace(b"UPX", random_string.encode("ascii"), 4))
         # copy the file over
-        subprocess.Popen("mv %s/temp.binary %s" % (userconfigpath, path_to_file),
-                         stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).wait()
+        os.replace(temp_binary_path, path_to_file)
     time.sleep(3)
 
 
