@@ -307,3 +307,20 @@ def test_spawn_uses_python_file_operations_for_staging():
     assert 'copy_matches(os.path.join(definepath, "src", "html", "*.bin"), apache_path)' in source
     assert 'copy_matches(os.path.join(userconfigpath, "web_clone", "*"), apache_path)' in source
     assert 'remove_matches(os.path.join(apache_path, "Signed*"))' in source
+
+
+def test_payload_copy_helpers_avoid_shell_file_operations():
+    autorun = Path("src/autorun/autolaunch.py").read_text()
+    mssql = Path("src/fasttrack/mssql.py").read_text()
+    create_payload = Path("src/core/msf_attacks/create_payload.py").read_text()
+
+    assert 'subprocess.Popen("rm -rf {0} 1> /dev/null 2> /dev/null;"' not in autorun
+    assert 'subprocess.Popen("cp %s/msf.exe %s/1msf.exe"' not in mssql
+    assert 'subprocess.Popen("cp " + msfpath + "local/%s %s"' not in create_payload
+    assert 'subprocess.Popen("mkdir %s/web_clone;cp src/html/msf.exe %s/web_clone/x"' not in create_payload
+    assert 'subprocess.Popen("cp src/html/msf.exe %s/x.exe"' not in create_payload
+    assert "def reset_autorun_path():" in autorun
+    assert 'glob.glob(os.path.join(core.userconfigpath, "dll", "*"))' in autorun
+    assert "import _thread as thread" in mssql
+    assert 'payload_filename = os.path.join(web_path, "1msf.exe")' in mssql
+    assert 'shutil.copyfile("src/html/msf.exe", os.path.join(web_clone_path, "x"))' in create_payload
