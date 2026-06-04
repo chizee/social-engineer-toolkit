@@ -273,3 +273,23 @@ def test_java_signing_helpers_avoid_shell_file_operations():
     assert 'subprocess.Popen(["jar", "cvf", "Java_Update.jar", "Java.class"])' in combined
     assert 'shutil.move("Signed_Update.jar", os.path.join(core.userconfigpath, "Signed_Update.jar"))' in combined
     assert 'shutil.move("Signed_Update.jar", os.path.join(core.userconfigpath, "Signed_Update.jar.orig"))' in combined
+
+
+def test_webattack_setup_helpers_avoid_shell_file_operations():
+    report_generator = Path("src/webattack/harvester/report_generator.py").read_text()
+    tabnabbing = Path("src/webattack/tabnabbing/tabnabbing.py").read_text()
+    multiattack = Path("src/webattack/multi_attack/multiattack.py").read_text()
+    setssl = Path("src/core/ssl/setssl.py").read_text()
+
+    assert 'subprocess.Popen("cp -rf %s/src/core/reports/files' not in report_generator
+    assert 'subprocess.Popen("mv %s/web_clone/index.html %s/web_clone/index2.html"' not in tabnabbing
+    assert 'subprocess.Popen("rm -rf %s/web_clone;mkdir %s/web_clone/"' not in multiattack
+    assert 'subprocess.Popen("mkdir CA;cd CA;mkdir newcerts private"' not in setssl
+    assert "subprocess.Popen(\"echo '01' > serial;touch index.txt\"" not in setssl
+    assert 'subprocess.Popen(\n    "cp private/cakey.pem newreq.pem;cp *.pem ../"' not in setssl
+    assert 'dirs_exist_ok=True' in report_generator
+    assert 'from urllib import request' in tabnabbing
+    assert 'shutil.rmtree(web_clone_path)' in multiattack
+    assert 'os.makedirs(os.path.join("CA", "newcerts"), exist_ok=True)' in setssl
+    assert '"openssl", "req",' in setssl
+    assert '"-extensions", "v3_ca"' in setssl
