@@ -501,15 +501,15 @@ try:
                         print_status("Prepping Multi-pyInjector for delivery..")
                     # here we obfuscate the binary a little bit
                     random_string = generate_random_string(3, 3).upper()
-                    if choice1 == "shellcode/alphanum":
-                        fileopen = open("%s/src/payloads/exe/shellcodeexec.binary" % (definepath), "rb").read()
-                    if choice1 == "shellcode/pyinject":
-                        fileopen = open("%s/src/payloads/set_payloads/pyinjector.binary" % (definepath), "rb").read()
-                    if choice1 == "shellcode/multipyinject":
-                        fileopen = open("%s/src/payloads/set_payloads/multi_pyinjector.binary" % (definepath), "rb").read()
+                    try:
+                        fileopen = open(legacy_payload_binary_path(definepath, choice1), "rb").read()
+                    except FileNotFoundError as error:
+                        print_error(str(error))
+                        print_error("Select a supported payload or provide a custom executable instead.")
+                        exit_set()
 
                     # write out the payload
-                    if choice1 == "shellcode/alphanum" or choice1 == "shellcode/pyinject" or choice1 == "shellcode/multipyiject":
+                    if choice1 == "shellcode/alphanum" or choice1 == "shellcode/pyinject" or choice1 == "shellcode/multipyinject":
                         filewrite = open(userconfigpath + "msf.exe", "wb")
                         filewrite.write(fileopen)
                         filewrite.close()
